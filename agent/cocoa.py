@@ -169,7 +169,7 @@ class CoCoAgent():
             self.log_technique(cbt_technique)
             print("Assistant: ", response)
 
-    async def process_dialogue(self, latest_dialogue: str) -> DialogueResponse:
+    async def process_dialogue(self, latest_dialogue: str) -> str:
         """
         Process a single dialogue message and return structured response.
 
@@ -211,9 +211,4 @@ class CoCoAgent():
         )
         self.log_technique(cbt_technique)
 
-        return DialogueResponse(
-            response=response,
-            distortion_type=distortion_type,
-            cbt_technique=cbt_technique,
-            cbt_stage=cbt_stage
-        )
+        return response

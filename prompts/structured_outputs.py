@@ -8,7 +8,7 @@ class CognitiveDistortion(BaseModel):
 
 
 class DialogueRequest(BaseModel):
-    latest_dialogue: str
+    messages: str
 
 
 class DialogueResponse(BaseModel):
