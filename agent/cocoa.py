@@ -2,7 +2,7 @@ import logging
 
 from openai import OpenAI
 
-from prompts.structured_outputs import CognitiveDistortion
+from prompts.structured_outputs import CognitiveDistortion, DialogueResponse
 from prompts.prompts import CBTPrompt
 
 # Configure logging
@@ -27,7 +27,7 @@ class CoCoAgent():
         """
         self.model_name = "gpt-4o-mini"
         self.llm_client = OpenAI(api_key=api_key)
-        self.technique_usage_log = list()
+        self.technique_usage = list()
         self.chat_history = list()
         # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
@@ -95,7 +95,7 @@ class CoCoAgent():
         # logger.info("Received chat response: %s", chat_response)
         return chat_response
 
-    def log_technique_usage(self, technique):
+    def log_technique(self, technique):
         """
         Log the usage of a specific technique.
 
@@ -103,7 +103,7 @@ class CoCoAgent():
             technique (str): The technique to log.
         """
         # logger.info("Logging technique usage: %s", technique)
-        self.technique_usage_log.append(technique)
+        self.technique_usage.append(technique)
 
     def detect_cognitive_distortion(self, latest_dialogue):
         """
@@ -117,14 +117,14 @@ class CoCoAgent():
         """
         return self.structured_response_from_openai(CBTPrompt.cognitive_distortion_detection(latest_dialogue))
 
-    def select_cbt_stage(self, technique: str, progress: str, technique_usage_log: str, latest_dialogue: str):
+    def select_cbt_stage(self, technique: str, progress: str, latest_dialogue: str):
         """
         Select the CBT stage based on the detected cognitive distortion.
 
         Returns:
             str: The selected CBT stage.
         """
-        return self.response_from_opanai(CBTPrompt.stage_selection(technique=technique, progress=progress, technique_usage_log=technique_usage_log, latest_dialogue=latest_dialogue))
+        return self.response_from_opanai(CBTPrompt.stage_selection(technique=technique, progress=progress, technique_usage_log=self.technique_usage, latest_dialogue=latest_dialogue))
 
     def select_cbt_technique(self, distortion_type):
         """
@@ -141,6 +141,8 @@ class CoCoAgent():
         """
         logger.info("Starting CoCoAgent run loop")
         while True:
+            logger.info("chat_history: %s", self.chat_history)
+            logger.info("technique_usage %s: ", self.technique_usage)
             latest_dialogue = input("User: ")
             self.chat_history.append(
                 {"role": "user", "content": latest_dialogue})
@@ -152,11 +154,11 @@ class CoCoAgent():
             logger.info("Selected CBT technique: %s", cbt_technique)
 
             cbt_stage = self.select_cbt_stage(
-                technique=cbt_technique, progress="", technique_usage_log=self.technique_usage_log, latest_dialogue=latest_dialogue)
+                technique=cbt_technique, progress="", latest_dialogue=self.chat_history)
             logger.info("Selected CBT stage: %s", cbt_stage)
 
             response = self.response_from_opanai(prompt=CBTPrompt.final(
-                latest_dialogue=latest_dialogue,
+                latest_dialogue=self.chat_history,
                 technique=cbt_technique,
                 cbt_documentation="",
                 stage_example="",
@@ -164,5 +166,54 @@ class CoCoAgent():
             )
             self.chat_history.append(
                 {"role": "assistant", "content": response})
-            self.log_technique_usage(cbt_technique)
+            self.log_technique(cbt_technique)
             print("Assistant: ", response)
+
+    async def process_dialogue(self, latest_dialogue: str) -> DialogueResponse:
+        """
+        Process a single dialogue message and return structured response.
+
+        Args:
+            latest_dialogue (str): The latest dialogue from the user.
+
+        Returns:
+            DialogueResponse: Structured response containing the assistant's reply and metadata
+        """
+        self.chat_history.append(
+            {"role": "user", "content": latest_dialogue}
+        )
+
+        distortion_type = self.detect_cognitive_distortion(latest_dialogue)
+        logger.info("Detected cognitive distortion: %s", distortion_type)
+
+        cbt_technique = self.select_cbt_technique(distortion_type)
+        logger.info("Selected CBT technique: %s", cbt_technique)
+
+        cbt_stage = self.select_cbt_stage(
+            technique=cbt_technique,
+            progress="",
+            latest_dialogue=self.chat_history
+        )
+        logger.info("Selected CBT stage: %s", cbt_stage)
+
+        response = self.response_from_opanai(
+            prompt=CBTPrompt.final(
+                latest_dialogue=self.chat_history,
+                technique=cbt_technique,
+                cbt_documentation="",
+                stage_example="",
+                stage=cbt_stage
+            )
+        )
+
+        self.chat_history.append(
+            {"role": "assistant", "content": response}
+        )
+        self.log_technique(cbt_technique)
+
+        return DialogueResponse(
+            response=response,
+            distortion_type=distortion_type,
+            cbt_technique=cbt_technique,
+            cbt_stage=cbt_stage
+        )
