@@ -9,6 +9,9 @@ from prompts.prompts import CBTPrompt
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Suppress httpx INFO logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 
 class CoCoAgent():
     """CoCoAgent is a conversational agent that interacts with users and detects cognitive distortions
@@ -38,7 +41,7 @@ class CoCoAgent():
         Returns:
             str: The response from OpenAI.
         """
-        logger.info("Generating response from OpenAI for prompt: %s", prompt)
+        # logger.info("Generating response from OpenAI for prompt: %s", prompt)
         completion = self.llm_client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -145,14 +148,21 @@ class CoCoAgent():
             distortion_type = self.detect_cognitive_distortion(latest_dialogue)
             logger.info("Detected cognitive distortion: %s", distortion_type)
 
-            cbt_technique = self.select_cbt_technique()
+            cbt_technique = self.select_cbt_technique(distortion_type)
             logger.info("Selected CBT technique: %s", cbt_technique)
 
-            cbt_stage = self.select_cbt_stage()
+            cbt_stage = self.select_cbt_stage(
+                technique=cbt_technique, progress="", technique_usage_log=self.technique_usage_log, latest_dialogue=latest_dialogue)
             logger.info("Selected CBT stage: %s", cbt_stage)
 
             response = self.response_from_opanai(prompt=CBTPrompt.final(
-                latest_dialogue=latest_dialogue, distortion_type=distortion_type, technique=cbt_technique, cbt_documentation="", stage_example="", stage=cbt_stage))
+                latest_dialogue=latest_dialogue,
+                technique=cbt_technique,
+                cbt_documentation="",
+                stage_example="",
+                stage=cbt_stage)
+            )
             self.chat_history.append(
                 {"role": "assistant", "content": response})
+            self.log_technique_usage(cbt_technique)
             print("Assistant: ", response)
