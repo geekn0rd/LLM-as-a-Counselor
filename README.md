@@ -1,8 +1,7 @@
 # 🍫CoCoA: CBT-based Conversational Counseling Agent 💬
 
-Welcome to **CoCoA**! 🧠 This repository implements a **Conversational Counseling Agent** designed to provide psychological support using **Cognitive Behavioral Therapy (CBT)** techniques. 🗣️❤️
-
-![Therapy Bot](https://media.giphy.com/media/3o6gE5aYp8lBz6nU3a/giphy.gif)
+Welcome to **CoCoA**!<br>
+🧠 This repository implements a **Conversational Counseling Agent** designed to provide psychological support using **Cognitive Behavioral Therapy (CBT)** techniques. 🗣️❤️
 
 ## 🚀 Features
 
@@ -62,9 +61,4 @@ CoCoA/
 
 📄 Read the full paper [here](https://arxiv.org/abs/2402.17546). 🌍
 
-![Thank You](https://media.giphy.com/media/l4pTfx2qLszoacZRS/giphy.gif)
-
----
-
-✨ *Empowering mental well-being, one conversation at a time.* ✨
-
+![yes](https://media.giphy.com/media/UsBeJlv78Acb0RiX1v/giphy.gif?cid=ecf05e4763eki6g7zkn7m4dpet1z19o55g1nl56vir89n52r&ep=v1_gifs_search&rid=giphy.gif&ct=g)
