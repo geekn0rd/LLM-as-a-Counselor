@@ -1,8 +1,8 @@
-class Prompt:
+class CBTPrompt:
     """ A class to represent various prompts used in a Cognitive Behavioral Therapy (CBT) based psychotherapeutic system.
     Methods
     """
-    
+
     static = '''
     # System Role
     You are a psychotherapist who uses Cognitive Behavioral
@@ -45,25 +45,25 @@ class Prompt:
     '''
 
     @staticmethod
-    def dynamic(latest_dialogue: str, CBT_technique: str, CBT_documentation: str, CBT_stage: str, CBT_stage_example: str) -> str:
+    def dynamic(latest_dialogue: str, technique: str, cbt_documentation: str, stage: str, stage_example: str) -> str:
         return f'''
     # Given information
     **recent utterances**: ```
     {latest_dialogue}```
 
     **CBT technique to employ**: ```
-    {CBT_technique}```
+    {technique}```
 
     **description of CBT technique** : ```
-    {CBT_documentation}```
+    {cbt_documentation}```
 
     **CBT stage to employ:** ```
-    {CBT_stage}```
+    {stage}```
 
     **utterance example of the stage:** ```
-    {CBT_stage_example}```
+    {stage_example}```
     '''
-    
+
     @staticmethod
     def cognitive_distortion_detection(latest_dialogue: str) -> str:
         return f'''
@@ -90,7 +90,7 @@ class Prompt:
     '''
 
     @staticmethod
-    def technique_decision(distortion_type: str, memory: str) -> str:
+    def technique_selection(distortion_type: str, memory: str) -> str:
         return f'''
     # System Role
     You are an expert in CBT techniques and a counseling agent.
@@ -117,7 +117,7 @@ class Prompt:
     '''
 
     @staticmethod
-    def stage_decision(technique: str, progress: str, technique_usage_log: str, latest_dialogue: str) -> str:
+    def stage_selection(technique: str, progress: str, technique_usage_log: str, latest_dialogue: str) -> str:
         return f'''
     # System Role
     You are an expert in CBT techniques and a counseling agent.
@@ -136,3 +136,7 @@ class Prompt:
     # Output
     stage number
     '''
+
+    @staticmethod
+    def final(latest_dialogue: str, technique: str, cbt_documentation: str, stage: str, stage_example: str) -> str:
+        return CBTPrompt.static + CBTPrompt.dynamic(latest_dialogue, technique, cbt_documentation, stage, stage_example)

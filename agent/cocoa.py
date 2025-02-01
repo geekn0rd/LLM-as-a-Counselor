@@ -2,17 +2,19 @@ import logging
 
 from openai import OpenAI
 
-from prompts.prompts import Prompt
 from prompts.structured_outputs import CognitiveDistortion
+from prompts.prompts import CBTPrompt
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class CoCoAgent():
     """CoCoAgent is a conversational agent that interacts with users and detects cognitive distortions
     in their dialogue using OpenAI's language model.
     """
+
     def __init__(self, api_key):
         """
         Initialize the CoCoAgent with the given API key.
@@ -26,7 +28,7 @@ class CoCoAgent():
         self.chat_history = list()
         # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
-    def response_from_opanai(self, prompt):
+    def response_from_opanai(self, prompt: str) -> str:
         """
         Generate a response from OpenAI for the given prompt.
 
@@ -81,7 +83,7 @@ class CoCoAgent():
         response = self.llm_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": Prompt.static},
+                {"role": "system", "content": CBTPrompt.static},
                 *self.chat_history
             ],
             temperature=0,
@@ -110,9 +112,26 @@ class CoCoAgent():
         Returns:
             CognitiveDistortion: The detected cognitive distortion.
         """
-        logger.info("Detecting cognitive distortion for dialogue: %s", latest_dialogue)
-        return self.structured_response_from_openai(Prompt.cognitive_distortion_detection(latest_dialogue))
-    
+        return self.structured_response_from_openai(CBTPrompt.cognitive_distortion_detection(latest_dialogue))
+
+    def select_cbt_stage(self, technique: str, progress: str, technique_usage_log: str, latest_dialogue: str):
+        """
+        Select the CBT stage based on the detected cognitive distortion.
+
+        Returns:
+            str: The selected CBT stage.
+        """
+        return self.response_from_opanai(CBTPrompt.stage_selection(technique=technique, progress=progress, technique_usage_log=technique_usage_log, latest_dialogue=latest_dialogue))
+
+    def select_cbt_technique(self, distortion_type):
+        """
+        Select the CBT technique to employ based on the detected cognitive distortion.
+
+        Returns:
+            str: The selected CBT technique.
+        """
+        return self.response_from_opanai(CBTPrompt.technique_selection(distortion_type=distortion_type, memory=self.chat_history))
+
     def run(self):
         """
         Start the CoCoAgent run loop, interacting with the user and detecting cognitive distortions.
@@ -120,9 +139,20 @@ class CoCoAgent():
         logger.info("Starting CoCoAgent run loop")
         while True:
             latest_dialogue = input("User: ")
-            self.chat_history.append({"role": "user", "content": latest_dialogue})
+            self.chat_history.append(
+                {"role": "user", "content": latest_dialogue})
+
             distortion_type = self.detect_cognitive_distortion(latest_dialogue)
             logger.info("Detected cognitive distortion: %s", distortion_type)
-            response = self.chat()
-            self.chat_history.append({"role": "assistant", "content": response})
+
+            cbt_technique = self.select_cbt_technique()
+            logger.info("Selected CBT technique: %s", cbt_technique)
+
+            cbt_stage = self.select_cbt_stage()
+            logger.info("Selected CBT stage: %s", cbt_stage)
+
+            response = self.response_from_opanai(prompt=CBTPrompt.final(
+                latest_dialogue=latest_dialogue, distortion_type=distortion_type, technique=cbt_technique, cbt_documentation="", stage_example="", stage=cbt_stage))
+            self.chat_history.append(
+                {"role": "assistant", "content": response})
             print("Assistant: ", response)
