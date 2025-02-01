@@ -24,7 +24,7 @@ class CoCoAgent():
         self.llm_client = OpenAI(api_key=api_key)
         self.technique_usage_log = list()
         self.chat_history = list()
-        logger.info("CoCoAgent initialized with model: %s", self.model_name)
+        # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
     def response_from_opanai(self, prompt):
         """
@@ -45,7 +45,7 @@ class CoCoAgent():
             temperature=0,
         )
         response = completion.choices[0].message.content
-        logger.info("Received response: %s", response)
+        # logger.info("Received response: %s", response)
         return response
 
     def structured_response_from_openai(self, prompt):
@@ -58,7 +58,7 @@ class CoCoAgent():
         Returns:
             CognitiveDistortion: The structured response from OpenAI.
         """
-        logger.info("Generating structured response from OpenAI for prompt: %s", prompt)
+        # logger.info("Generating structured response from OpenAI for prompt: %s", prompt)
         completion = self.llm_client.beta.chat.completions.parse(
             model=self.model_name,
             messages=[
@@ -67,7 +67,7 @@ class CoCoAgent():
             response_format=CognitiveDistortion,
         )
         response = completion.choices[0].message.parsed
-        logger.info("Received structured response: %s", response)
+        # logger.info("Received structured response: %s", response)
         return response
 
     def chat(self):
@@ -87,7 +87,7 @@ class CoCoAgent():
             temperature=0,
         )
         chat_response = response.choices[0].message.content
-        logger.info("Received chat response: %s", chat_response)
+        # logger.info("Received chat response: %s", chat_response)
         return chat_response
 
     def log_technique_usage(self, technique):
@@ -97,7 +97,7 @@ class CoCoAgent():
         Args:
             technique (str): The technique to log.
         """
-        logger.info("Logging technique usage: %s", technique)
+        # logger.info("Logging technique usage: %s", technique)
         self.technique_usage_log.append(technique)
 
     def detect_cognitive_distortion(self, latest_dialogue):
