@@ -128,6 +128,18 @@ class CoCoAgent():
         """
         return self.response_from_opanai(CBTPrompt.stage_selection(technique=technique, progress=progress, technique_usage_log=self.technique_usage, latest_dialogue=latest_dialogue))
 
+    def extract_insight(self, latest_dialogue):
+        """
+        Extract insights from the latest dialogue.
+
+        Args:
+            latest_dialogue (str): The latest dialogue from the user.
+
+        Returns:
+            str: The extracted insights.
+        """
+        return self.response_from_opanai(CBTPrompt.extract_insight(latest_dialogue))
+
     def select_cbt_technique(self, distortion_type):
         """
         Select the CBT technique to employ based on the detected cognitive distortion.
@@ -171,25 +183,32 @@ class CoCoAgent():
             self.log_technique(cbt_technique)
             print("Assistant: ", response)
 
-    async def process_dialogue(self, latest_dialogue: str) -> str:
+    async def process_dialogue(self, client_utterance: str) -> str:
         """
         Process a single dialogue message and return structured response.
 
         Args:
-            latest_dialogue (str): The latest dialogue from the user.
+         client_utterance (str): The latest dialogue from the user.
 
         Returns:
             DialogueResponse: Structured response containing the assistant's reply and metadata
         """
         self.chat_history.append(
-            {"role": "user", "content": latest_dialogue}
+            {"role": "user", "content": client_utterance}
         )
+
+        latest_dialogue = ''.join(self.chat_history[-2:])
 
         cognitive_distortion = self.detect_cognitive_distortion(
             latest_dialogue)
         logger.info("Detected cognitive distortion: %s", cognitive_distortion)
         if cognitive_distortion.distortion_type != "None":
             self.cd_memory.append(cognitive_distortion)
+
+        utterence_insight = self.extract_insight(latest_dialogue)
+        logger.info("Extracted insight: %s", utterence_insight)
+        if utterence_insight != "None":
+            self.basic_memory.append(utterence_insight)
 
         cbt_technique = self.select_cbt_technique(cognitive_distortion)
         logger.info("Selected CBT technique: %s", cbt_technique)

@@ -139,3 +139,23 @@ class CBTPrompt:
     @staticmethod
     def final(latest_dialogue: str, technique: str, cbt_documentation: str, stage: str, stage_example: str) -> str:
         return CBTPrompt.static + CBTPrompt.dynamic(latest_dialogue, technique, cbt_documentation, stage, stage_example)
+
+    @staticmethod
+    def extract_insight(latest_dialogue: str) -> str:
+        return f'''
+    # System Role  
+    You are a psychotherapist who uses Cognitive Behavioral Therapy to help patients.
+
+    # Task
+    Your task is to extract insights from the given dialogue.
+    That can be used later for helping the patient.
+
+    # Instructions
+    Even if the given utterance consists of multiple sentences, consider it as one utterance and extract insights.
+    Insights are concise sentences about the patient's mental state, behavior, or emotions or any other relevant information.
+    If nothing useful can be extracted, output "None".
+
+    # Given information
+    **recent utterances**: ```
+    {latest_dialogue}```
+    '''
