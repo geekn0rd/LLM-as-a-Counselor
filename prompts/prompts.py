@@ -5,7 +5,10 @@ class CBTPrompt:
 
     chunk_size = 1024
     cbt_doc = "None"
-    static = '''
+
+    @staticmethod
+    def static(latest_dialogue: str) -> str:
+        return '''
     # System Role
     You are a psychotherapist who uses Cognitive Behavioral
     Therapy to treat patients of all types.
@@ -44,6 +47,9 @@ class CBTPrompt:
     - Information: Provide useful information to the help-seeker,
     for example with data, facts, opinions, resources, or by answering questions.
     - Others: Exchange pleasantries and use other support strategies that do not fall into the above categories.
+    
+    **recent utterances**: ```
+    {latest_dialogue}``
     '''
 
     @classmethod
@@ -55,11 +61,9 @@ class CBTPrompt:
         cls.cbt_doc = markdown_content
 
     @classmethod
-    def dynamic(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
+    def dynamic(cls, technique: str, stage: str, stage_example: str) -> str:
         return f'''
     # Given information
-    **recent utterances**: ```
-    {latest_dialogue}```
 
     **CBT technique to employ**: ```
     {technique}```
@@ -145,10 +149,6 @@ class CBTPrompt:
     # Output
     stage number
     '''
-
-    @classmethod
-    def final(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
-        return cls.static + cls.dynamic(latest_dialogue, technique, stage, stage_example)
 
     @staticmethod
     def extract_insight(latest_dialogue: str) -> str:
