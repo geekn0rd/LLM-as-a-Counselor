@@ -3,6 +3,8 @@ class CBTPrompt:
     Methods
     """
 
+    chunk_size = 1024
+    cbt_doc = "None"
     static = '''
     # System Role
     You are a psychotherapist who uses Cognitive Behavioral
@@ -44,8 +46,16 @@ class CBTPrompt:
     - Others: Exchange pleasantries and use other support strategies that do not fall into the above categories.
     '''
 
+    @classmethod
+    def load_cbt_doc(cls):
+        with open("docs/cbt_doc.md", 'r') as file:
+            markdown_content = ''
+            while chunk := file.read(cls.chunk_size):
+                markdown_content += chunk
+        cls.cbt_doc = markdown_content
+
     @staticmethod
-    def dynamic(latest_dialogue: str, technique: str, cbt_documentation: str, stage: str, stage_example: str) -> str:
+    def dynamic(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
         return f'''
     # Given information
     **recent utterances**: ```
@@ -55,7 +65,7 @@ class CBTPrompt:
     {technique}```
 
     **description of CBT technique** : ```
-    {cbt_documentation}```
+    {cls.cbt_doc}```
 
     **CBT stage to employ:** ```
     {stage}```
@@ -137,8 +147,8 @@ class CBTPrompt:
     '''
 
     @staticmethod
-    def final(latest_dialogue: str, technique: str, cbt_documentation: str, stage: str, stage_example: str) -> str:
-        return CBTPrompt.static + CBTPrompt.dynamic(latest_dialogue, technique, cbt_documentation, stage, stage_example)
+    def final(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
+        return cls.static + cls.dynamic(latest_dialogue, technique, cls.cbt_doc, stage, stage_example)
 
     @staticmethod
     def extract_insight(latest_dialogue: str) -> str:

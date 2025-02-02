@@ -1,9 +1,11 @@
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
-from agent.cocoa import CoCoAgent
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+
+from agent.cocoa import CoCoAgent
 from prompts.structured_outputs import DialogueRequest, DialogueResponse
 
 # Load environment variables from .env file

@@ -1,9 +1,10 @@
+import json
 import logging
 
 from openai import OpenAI
 
-from prompts.structured_outputs import CognitiveDistortion, DialogueResponse
 from prompts.prompts import CBTPrompt
+from prompts.structured_outputs import CognitiveDistortion, DialogueResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,8 @@ class CoCoAgent():
         self.chat_history = list()
         self.basic_memory = list()
         self.cd_memory = list()
+
+        CBTPrompt.load_cbt_doc()
         # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
     def response_from_opanai(self, prompt: str) -> str:
@@ -197,7 +200,8 @@ class CoCoAgent():
             {"role": "user", "content": client_utterance}
         )
 
-        latest_dialogue = ''.join(self.chat_history[-2:])
+        latest_dialogue = ''.join([json.dumps(item)
+                                  for item in self.chat_history[-2:]])
 
         cognitive_distortion = self.detect_cognitive_distortion(
             latest_dialogue)
