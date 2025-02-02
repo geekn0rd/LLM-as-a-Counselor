@@ -177,7 +177,6 @@ class CoCoAgent():
             response = self.response_from_opanai(prompt=CBTPrompt.final(
                 latest_dialogue=self.chat_history,
                 technique=cbt_technique,
-                cbt_documentation="",
                 stage_example="",
                 stage=cbt_stage)
             )
@@ -228,7 +227,6 @@ class CoCoAgent():
             prompt=CBTPrompt.final(
                 latest_dialogue=self.chat_history,
                 technique=cbt_technique,
-                cbt_documentation="",
                 stage_example="",
                 stage=cbt_stage
             )

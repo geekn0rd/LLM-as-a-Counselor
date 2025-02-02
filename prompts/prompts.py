@@ -54,7 +54,7 @@ class CBTPrompt:
                 markdown_content += chunk
         cls.cbt_doc = markdown_content
 
-    @staticmethod
+    @classmethod
     def dynamic(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
         return f'''
     # Given information
@@ -146,7 +146,7 @@ class CBTPrompt:
     stage number
     '''
 
-    @staticmethod
+    @classmethod
     def final(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
         return cls.static + cls.dynamic(latest_dialogue, technique, cls.cbt_doc, stage, stage_example)
 
