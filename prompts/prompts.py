@@ -6,27 +6,30 @@ class CBTPrompt:
     chunk_size = 1024
     cbt_doc = "None"
 
-    @staticmethod
-    def static(latest_dialogue: str) -> str:
-        return '''
-    # System Role
-    You are a psychotherapist who uses Cognitive Behavioral
-    Therapy to treat patients of all types.
+    @classmethod
+    def load_cbt_doc(cls):
+        with open("docs/cbt_doc.md", 'r') as file:
+            markdown_content = ''
+            while chunk := file.read(cls.chunk_size):
+                markdown_content += chunk
+        cls.cbt_doc = markdown_content
+
+    @classmethod
+    def final_prompt(cls, latest_dialogue: str, technique: str = "None", stage: str = "None", stage_example: str = "None") -> str:
+        return f'''
+        # System Role
+    You are a psychotherapist who uses Cognitive Behavioral Therapy to treat patients of all types.
 
     # Task
-    Your task is to generate
-    a response following the below instructions.
+    Your task is to generate a response following the below instructions.
 
     # Instructions
     1. Generate response based on given information: recent
     utterances, CBT technique to employ, the description of CBT
     technique, stage of CBT technique you should go on, utterance example of the stage you should go on.
-    2. If CBT technique to employ and the description of CBT
-    technique is None, don’t use the CBT technique.
-    3. Select one of the given ESC techniques and generate a supportive response in the client’s dialogue providing emotional
-    support.
-    4. Do not mention specific CBT techniques or steps you are
-    looking to apply concretely.
+    2. If CBT technique to employ and the description of CBT technique is None, don’t use the CBT technique.
+    3. Select one of the given ESC techniques and generate a supportive response in the client’s dialogue providing emotional support.
+    4. Do not mention specific CBT techniques or steps you are looking to apply concretely.
 
     # ESC strategy
     - Question: Asking for information related to the problem to
@@ -48,22 +51,10 @@ class CBTPrompt:
     for example with data, facts, opinions, resources, or by answering questions.
     - Others: Exchange pleasantries and use other support strategies that do not fall into the above categories.
     
+   # Given information
+
     **recent utterances**: ```
     {latest_dialogue}``
-    '''
-
-    @classmethod
-    def load_cbt_doc(cls):
-        with open("docs/cbt_doc.md", 'r') as file:
-            markdown_content = ''
-            while chunk := file.read(cls.chunk_size):
-                markdown_content += chunk
-        cls.cbt_doc = markdown_content
-
-    @classmethod
-    def dynamic(cls, technique: str, stage: str, stage_example: str) -> str:
-        return f'''
-    # Given information
 
     **CBT technique to employ**: ```
     {technique}```
@@ -130,7 +121,7 @@ class CBTPrompt:
     '''
 
     @staticmethod
-    def stage_selection(technique: str, progress: str, technique_usage_log: str, latest_dialogue: str) -> str:
+    def stage_selection(technique: str, progress: str, cbt_usage_log: str, latest_dialogue: str) -> str:
         return f'''
     # System Role
     You are an expert in CBT techniques and a counseling agent.
@@ -140,7 +131,7 @@ class CBTPrompt:
     # Task Instruction
     The following dictionary represents CBT usage log, which is
     the mapping of CBT techniques to the stage of each technique
-    indicating the number of stage completed. ```{technique_usage_log}```
+    indicating the number of stage completed. ```{cbt_usage_log}```
     The conversation below is a conversation in which {technique} has been applied. ```{latest_dialogue}```
 
     What is the stage number you would undertake for {technique} based on the conversation provided, the sequence of the CBT Technique and current dialogue state?
