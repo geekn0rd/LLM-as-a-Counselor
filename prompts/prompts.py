@@ -76,10 +76,9 @@ class CBTPrompt:
     Even if the given utterance consists of multiple sentences,
     consider it as one utterance and identify cognitive distortions.
     If there are multiple types of cognitive distortions, output the
-    most likely type of cognitive distortion. Also, assign a severity
-    score from 1 to 5 on a Likert scale for the cognitive distortion.
-    Output must be JSON format with three keys(distortion_type, utterance,
-    score).
+    most likely type of cognitive distortion. Also, assign a severity score from 1 to 5 on a Likert scale for the cognitive distortion.
+    Output must be JSON format with three keys(distortion_type, utterance, score).
+    If there is no cognitive distortions in the utterance, output "None" as distortion_type and leave the other keys empty.
 
     # Types of cognitive distortion
     "All-or-Nothing Thinking", "Overgeneralizing", "Labeling", "Fortune Telling", "Mind Reading", "Emotional Reasoning",

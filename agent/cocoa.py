@@ -29,6 +29,8 @@ class CoCoAgent():
         self.llm_client = OpenAI(api_key=api_key)
         self.technique_usage = list()
         self.chat_history = list()
+        self.basic_memory = list()
+        self.cd_memory = list()
         # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
     def response_from_opanai(self, prompt: str) -> str:
@@ -183,10 +185,13 @@ class CoCoAgent():
             {"role": "user", "content": latest_dialogue}
         )
 
-        distortion_type = self.detect_cognitive_distortion(latest_dialogue)
-        logger.info("Detected cognitive distortion: %s", distortion_type)
+        cognitive_distortion = self.detect_cognitive_distortion(
+            latest_dialogue)
+        logger.info("Detected cognitive distortion: %s", cognitive_distortion)
+        if cognitive_distortion.distortion_type != "None":
+            self.cd_memory.append(cognitive_distortion)
 
-        cbt_technique = self.select_cbt_technique(distortion_type)
+        cbt_technique = self.select_cbt_technique(cognitive_distortion)
         logger.info("Selected CBT technique: %s", cbt_technique)
 
         cbt_stage = self.select_cbt_stage(
