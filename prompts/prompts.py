@@ -148,7 +148,7 @@ class CBTPrompt:
 
     @classmethod
     def final(cls, latest_dialogue: str, technique: str, stage: str, stage_example: str) -> str:
-        return cls.static + cls.dynamic(latest_dialogue, technique, cls.cbt_doc, stage, stage_example)
+        return cls.static + cls.dynamic(latest_dialogue, technique, stage, stage_example)
 
     @staticmethod
     def extract_insight(latest_dialogue: str) -> str:
