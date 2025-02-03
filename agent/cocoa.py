@@ -168,6 +168,19 @@ class CoCoAgent:
             )
         )
 
+    def retrieve_memory(
+        self, cd_star: CognitiveDistortion, latest_dialogue: str, n_results: int = 5
+    ) -> str:
+        b_k = self.basic_memory.query(
+            query_texts=[json.dumps(dict(cd_star)), latest_dialogue],
+            n_results=n_results,
+        )
+        d_k = self.cd_memory.query(
+            query_texts=[json.dumps(dict(cd_star)), latest_dialogue],
+            n_results=n_results,
+        )
+        return "\n".join(b_k["documents"][0]) + "\n" + str(d_k["metadatas"][0])
+
     async def process_dialogue(self, client_utterance: str) -> str:
         """
         Process a single dialogue message and return structured response.
@@ -181,7 +194,7 @@ class CoCoAgent:
         final_prompt = ""
         self.chat_history.append({"role": "user", "content": client_utterance})
 
-        latest_dialogue = "".join([json.dumps(item) for item in self.chat_history[-2:]])
+        latest_dialogue = "".join([json.dumps(item) for item in self.chat_history[-3:]])
         logger.info("Latest dialogue: %s", latest_dialogue)
 
         cognitive_distortion = self.detect_cognitive_distortion(latest_dialogue)
@@ -193,19 +206,22 @@ class CoCoAgent:
         if cognitive_distortion.distortion_type != "None":
             self.cd_memory.upsert(
                 documents=[cognitive_distortion.utterance],
-                ids=[f"id_{uuid.uuid4()}"],
+                ids=[f"{uuid.uuid4()}"],
                 metadatas=[dict(cognitive_distortion)],
             )
 
         if utterence_insight != "None":
             self.basic_memory.upsert(
-                documents=[utterence_insight], ids=[f"id_uuid.uuid4()"]
+                documents=[utterence_insight], ids=[f"{uuid.uuid4()}"]
             )
 
         if self.cd_memory.count() < 1:
             final_prompt = CBTPrompt.final_prompt(latest_dialogue)
         else:
-            cbt_technique = self.select_cbt_technique(cognitive_distortion)
+            cd_star = cognitive_distortion
+            relevant_memory = self.retrieve_memory(cd_star, latest_dialogue)
+            logger.info("Retrieved memory: %s", relevant_memory)
+            cbt_technique = self.select_cbt_technique(cd_star)
             logger.info("Selected CBT technique: %s", cbt_technique)
 
             cbt_stage = self.select_cbt_stage(
