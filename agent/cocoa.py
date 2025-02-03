@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from collections import defaultdict
 
 import chromadb
 from openai import OpenAI
@@ -31,29 +32,8 @@ class CoCoAgent:
         self.model_name = "gpt-4o-mini"
         self.llm_client = OpenAI(api_key=api_key)
         self.chroma_client = chromadb.Client()
-        self.cbt_usage_log = {
-            "Guided Discovery": ["not_started_yet"],
-            "Efficiency Evaluation": ["not_started_yet"],
-            "Pie Chart Technique": ["not_started_yet"],
-            "Alternative Perspective": ["not_started_yet"],
-            "Decatastrophizing": ["not_started_yet"],
-            "Scaling Questions": ["not_started_yet"],
-            "Socratic Questioning": ["not_started_yet"],
-            "Pros and Cons Analysis": ["not_started_yet"],
-            "Thought Experiment": ["not_started_yet"],
-            "Evidence-Based Questioning": ["not_started_yet"],
-            "Reality Testing": ["not_started_yet"],
-            "Continuum Technique": ["not_started_yet"],
-            "Changing Rules to Wishes": ["not_started_yet"],
-            "Behavior Experiment": ["not_started_yet"],
-            "Activity Scheduling": ["not_started_yet"],
-            "Problem-Solving Skills Training": ["not_started_yet"],
-            "Self-Assertiveness Training": ["not_started_yet"],
-            "Role-playing and Simulation": ["not_started_yet"],
-            "Practice of Assertive Conversation Skills": ["not_started_yet"],
-            "Systematic Exposure": ["not_started_yet"],
-            "Safety Behaviors Elimination": ["not_started_yet"],
-        }
+        self.cbt_usage_log = dict()
+        self.cbt_usage_log = defaultdict(lambda: ["not_started_yet"])
 
         self.chat_history = list()
         self.basic_memory = self.chroma_client.get_or_create_collection(
@@ -83,6 +63,27 @@ class CoCoAgent:
         response = completion.choices[0].message.content
         # logger.info("Received response: %s", response)
         return response
+
+    def stream_from_opanai(self, prompt: str):
+        """
+        Stream a response from OpenAI for the given prompt.
+
+        Args:
+            prompt (str): The prompt to send to OpenAI.
+
+        Returns:
+            str: The response from OpenAI.
+        """
+        # logger.info("Generating response from OpenAI for prompt: %s", prompt)
+        completion = self.llm_client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            stream=True,
+        )
+        for chunk in completion:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
 
     def structured_response_from_openai(self, prompt, structure):
         """
@@ -126,16 +127,6 @@ class CoCoAgent:
         # logger.info("Received chat response: %s", chat_response)
         return chat_response
 
-    def log_technique(self, technique):
-        """
-        Log the usage of a specific technique.
-
-        Args:
-            technique (str): The technique to log.
-        """
-        # logger.info("Logging technique usage: %s", technique)
-        self.cbt_usage_log.append(technique)
-
     def detect_cognitive_distortion(self, latest_dialogue):
         """
         Detect cognitive distortions in the latest dialogue.
@@ -161,7 +152,7 @@ class CoCoAgent:
         return self.structured_response_from_openai(
             CBTPrompt.stage_example(
                 technique=technique,
-                cbt_usage_log=self.cbt_usage_log[technique],
+                cbt_usage_log=self.cbt_usage_log,
                 latest_dialogue=latest_dialogue,
             ),
             StageExample,
@@ -193,7 +184,7 @@ class CoCoAgent:
         )
 
     def retrieve_memory(
-        self, cd_star: str, latest_dialogue: str, n_results: int = 5
+        self, cd_star: str, latest_dialogue: str, n_results: int = 3
     ) -> str:
         b_k = self.basic_memory.query(
             query_texts=[cd_star, latest_dialogue],
@@ -205,7 +196,7 @@ class CoCoAgent:
         )
         return "\n".join(b_k["documents"][0]) + "\n" + str(d_k["metadatas"][0])
 
-    async def process_dialogue(self, client_utterance: str) -> str:
+    def process_dialogue(self, client_utterance: str):
         """
         Process a single dialogue message and return structured response.
 
@@ -219,12 +210,12 @@ class CoCoAgent:
         self.chat_history.append({"role": "user", "content": client_utterance})
 
         latest_dialogue = "".join([json.dumps(item) for item in self.chat_history[-4:]])
-        logger.info("Latest dialogue: %s", latest_dialogue)
+        # logger.info("Latest dialogue: %s", latest_dialogue)
 
-        cognitive_distortion = self.detect_cognitive_distortion(latest_dialogue)
+        cognitive_distortion = self.detect_cognitive_distortion(client_utterance)
         logger.info("Detected cognitive distortion: %s", cognitive_distortion)
 
-        utterence_insight = self.extract_insight(latest_dialogue)
+        utterence_insight = self.extract_insight(client_utterance)
         logger.info("Extracted insight: %s", utterence_insight)
 
         if cognitive_distortion.distortion_type != "None":
@@ -257,12 +248,15 @@ class CoCoAgent:
                 latest_dialogue=latest_dialogue,
                 technique=cbt_technique,
                 stage=cbt_stage_example.stage_name,
-                stage_example=cbt_stage_example.exmaple,
+                stage_example=cbt_stage_example.example,
             )
-            self.log_technique(cbt_technique)
+            self.cbt_usage_log[cbt_technique] = cbt_stage_example.stage_name
 
-        response = self.response_from_opanai(prompt=final_prompt)
+        stream = self.stream_from_opanai(prompt=final_prompt)
+        ai_response = ""
+        for chunk in stream:
+            ai_response += chunk
+            yield chunk
 
-        self.chat_history.append({"role": "assistant", "content": response})
-
-        return response
+        self.chat_history.append({"role": "assistant", "content": ai_response})
+        logger.info("Last chat_history: %s", self.chat_history[-1])

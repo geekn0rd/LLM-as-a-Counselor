@@ -5,134 +5,13 @@ class CBTPrompt:
 
     chunk_size = 1024
     cbt_doc = "None"
-    cbt_stages = {
-        "Guided Discovery": [
-            "Identifying Thoughts",
-            "Exploring Evidence",
-            "Evaluating Beliefs",
-            "Forming New Insights",
-        ],
-        "Efficiency Evaluation": [
-            "Identifying Cognitive Patterns",
-            "Assessing Thought Efficiency",
-            "Challenging Ineffective Thoughts",
-            "Reinforcing Efficient Thinking",
-        ],
-        "Pie Chart Technique": [
-            "Defining the Issue",
-            "Identifying Contributing Factors",
-            "Creating the Pie Chart",
-            "Analyzing and Adjusting Proportions",
-        ],
-        "Alternative Perspective": [
-            "Recognizing Rigid Thinking",
-            "Generating Alternative Views",
-            "Evaluating Plausibility",
-            "Adopting Balanced Perspectives",
-        ],
-        "Decatastrophizing": [
-            "Identifying Catastrophic Thoughts",
-            "Evaluating Worst-Case Scenarios",
-            "Assessing Likelihood",
-            "Developing Coping Strategies",
-        ],
-        "Scaling Questions": [
-            "Defining the Issue",
-            "Setting a Rating Scale",
-            "Self-Assessment",
-            "Identifying Progress Points",
-        ],
-        "Socratic Questioning": [
-            "Identifying Automatic Thoughts",
-            "Questioning Underlying Beliefs",
-            "Examining Evidence",
-            "Drawing Rational Conclusions",
-        ],
-        "Pros and Cons Analysis": [
-            "Identifying the Issue",
-            "Listing Pros and Cons",
-            "Evaluating Impact",
-            "Decision-Making Based on Analysis",
-        ],
-        "Thought Experiment": [
-            "Presenting a Hypothetical Scenario",
-            "Predicting Outcomes",
-            "Comparing with Real-life Data",
-            "Adjusting Beliefs",
-        ],
-        "Evidence-Based Questioning": [
-            "Recognizing Core Beliefs",
-            "Gathering Supporting Evidence",
-            "Challenging with Contradictory Evidence",
-            "Reframing Thoughts",
-        ],
-        "Reality Testing": [
-            "Identifying Distorted Thoughts",
-            "Designing Reality Tests",
-            "Executing Experiments",
-            "Reviewing Results",
-        ],
-        "Continuum Technique": [
-            "Identifying Extreme Beliefs",
-            "Placing Beliefs on a Continuum",
-            "Exploring Middle Ground",
-            "Revising Extremes",
-        ],
-        "Changing Rules to Wishes": [
-            "Recognizing Rigid 'Should' Rules",
-            "Exploring Flexibility",
-            "Reframing into Preferences",
-            "Adopting Flexible Thinking",
-        ],
-        "Behavior Experiment": [
-            "Formulating Hypotheses",
-            "Planning Experiments",
-            "Conducting the Experiment",
-            "Analyzing Outcomes",
-        ],
-        "Activity Scheduling": [
-            "Identifying Enjoyable Activities",
-            "Planning Activities",
-            "Implementing the Schedule",
-            "Reviewing and Adjusting",
-        ],
-        "Problem-Solving Skills Training": [
-            "Defining the Problem",
-            "Generating Solutions",
-            "Evaluating Options",
-            "Implementing and Reviewing Solutions",
-        ],
-        "Self-Assertiveness Training": [
-            "Understanding Assertiveness",
-            "Identifying Personal Boundaries",
-            "Practicing Assertive Techniques",
-            "Applying in Real Situations",
-        ],
-        "Role-playing and Simulation": [
-            "Setting the Scene",
-            "Practicing Scenarios",
-            "Receiving Feedback",
-            "Refining Responses",
-        ],
-        "Practice of Assertive Conversation Skills": [
-            "Learning Assertive Communication",
-            "Role-Playing Conversations",
-            "Refining Skills",
-            "Applying in Real-life Situations",
-        ],
-        "Systematic Exposure": [
-            "Creating a Fear Hierarchy",
-            "Gradual Exposure to Fears",
-            "Managing Anxiety During Exposure",
-            "Consolidating Gains",
-        ],
-        "Safety Behaviors Elimination": [
-            "Identifying Safety Behaviors",
-            "Understanding Their Impact",
-            "Gradually Reducing Behaviors",
-            "Reinforcing Coping Skills",
-        ],
-    }
+    cbt_stages = [
+        "Identification of Problematic Thoughts/Behaviors",
+        "Understanding and Conceptualization",
+        "Challenging and Restructuring",
+        "Skill Development and Application",
+        "Reflection and Maintenance",
+    ]
 
     @classmethod
     def load_docs(cls):
@@ -262,7 +141,6 @@ class CBTPrompt:
     # System Role
     You are an expert in CBT techniques and a counseling agent.
     You are going to apply {technique} in counseling.
-    {cbt_usage_log} is the sequence of stages of the {technique} technique.
 
     # Task Instruction
     Determine which stage should the counseling follow, if enough progress is not yet made you give the current stage.
@@ -270,9 +148,10 @@ class CBTPrompt:
     Output a JSON with keys "stage_name" and "example".
 
     # Context
-    CBT usage log is the list of CBT technique indicating the proggress made. ```{cbt_usage_log}```
-    The conversation below is a conversation in which {technique} has been applied. ```{latest_dialogue}```
-    This is the list of all possible stages. ```{cls.cbt_stages[technique]}```
+    Following is the mapping of CBT techniques already used to the stage of each technique```{cbt_usage_log}```
+    If the technique in not present, it means it hasn't been used yet.
+    The conversation below is a conversation in which CBT has been applied. ```{latest_dialogue}```
+    This is the list of all possible stages. ```{cls.cbt_stages}```
     """
 
     @staticmethod
