@@ -1,22 +1,156 @@
 class CBTPrompt:
-    """ A class to represent various prompts used in a Cognitive Behavioral Therapy (CBT) based psychotherapeutic system.
+    """A class to represent various prompts used in a Cognitive Behavioral Therapy (CBT) based psychotherapeutic system.
     Methods
     """
 
     chunk_size = 1024
     cbt_doc = "None"
+    cbt_stages = {
+        "Guided Discovery": [
+            "Identifying Thoughts",
+            "Exploring Evidence",
+            "Evaluating Beliefs",
+            "Forming New Insights",
+        ],
+        "Efficiency Evaluation": [
+            "Identifying Cognitive Patterns",
+            "Assessing Thought Efficiency",
+            "Challenging Ineffective Thoughts",
+            "Reinforcing Efficient Thinking",
+        ],
+        "Pie Chart Technique": [
+            "Defining the Issue",
+            "Identifying Contributing Factors",
+            "Creating the Pie Chart",
+            "Analyzing and Adjusting Proportions",
+        ],
+        "Alternative Perspective": [
+            "Recognizing Rigid Thinking",
+            "Generating Alternative Views",
+            "Evaluating Plausibility",
+            "Adopting Balanced Perspectives",
+        ],
+        "Decatastrophizing": [
+            "Identifying Catastrophic Thoughts",
+            "Evaluating Worst-Case Scenarios",
+            "Assessing Likelihood",
+            "Developing Coping Strategies",
+        ],
+        "Scaling Questions": [
+            "Defining the Issue",
+            "Setting a Rating Scale",
+            "Self-Assessment",
+            "Identifying Progress Points",
+        ],
+        "Socratic Questioning": [
+            "Identifying Automatic Thoughts",
+            "Questioning Underlying Beliefs",
+            "Examining Evidence",
+            "Drawing Rational Conclusions",
+        ],
+        "Pros and Cons Analysis": [
+            "Identifying the Issue",
+            "Listing Pros and Cons",
+            "Evaluating Impact",
+            "Decision-Making Based on Analysis",
+        ],
+        "Thought Experiment": [
+            "Presenting a Hypothetical Scenario",
+            "Predicting Outcomes",
+            "Comparing with Real-life Data",
+            "Adjusting Beliefs",
+        ],
+        "Evidence-Based Questioning": [
+            "Recognizing Core Beliefs",
+            "Gathering Supporting Evidence",
+            "Challenging with Contradictory Evidence",
+            "Reframing Thoughts",
+        ],
+        "Reality Testing": [
+            "Identifying Distorted Thoughts",
+            "Designing Reality Tests",
+            "Executing Experiments",
+            "Reviewing Results",
+        ],
+        "Continuum Technique": [
+            "Identifying Extreme Beliefs",
+            "Placing Beliefs on a Continuum",
+            "Exploring Middle Ground",
+            "Revising Extremes",
+        ],
+        "Changing Rules to Wishes": [
+            "Recognizing Rigid 'Should' Rules",
+            "Exploring Flexibility",
+            "Reframing into Preferences",
+            "Adopting Flexible Thinking",
+        ],
+        "Behavior Experiment": [
+            "Formulating Hypotheses",
+            "Planning Experiments",
+            "Conducting the Experiment",
+            "Analyzing Outcomes",
+        ],
+        "Activity Scheduling": [
+            "Identifying Enjoyable Activities",
+            "Planning Activities",
+            "Implementing the Schedule",
+            "Reviewing and Adjusting",
+        ],
+        "Problem-Solving Skills Training": [
+            "Defining the Problem",
+            "Generating Solutions",
+            "Evaluating Options",
+            "Implementing and Reviewing Solutions",
+        ],
+        "Self-Assertiveness Training": [
+            "Understanding Assertiveness",
+            "Identifying Personal Boundaries",
+            "Practicing Assertive Techniques",
+            "Applying in Real Situations",
+        ],
+        "Role-playing and Simulation": [
+            "Setting the Scene",
+            "Practicing Scenarios",
+            "Receiving Feedback",
+            "Refining Responses",
+        ],
+        "Practice of Assertive Conversation Skills": [
+            "Learning Assertive Communication",
+            "Role-Playing Conversations",
+            "Refining Skills",
+            "Applying in Real-life Situations",
+        ],
+        "Systematic Exposure": [
+            "Creating a Fear Hierarchy",
+            "Gradual Exposure to Fears",
+            "Managing Anxiety During Exposure",
+            "Consolidating Gains",
+        ],
+        "Safety Behaviors Elimination": [
+            "Identifying Safety Behaviors",
+            "Understanding Their Impact",
+            "Gradually Reducing Behaviors",
+            "Reinforcing Coping Skills",
+        ],
+    }
 
     @classmethod
-    def load_cbt_doc(cls):
-        with open("docs/cbt_doc.md", 'r') as file:
-            markdown_content = ''
+    def load_docs(cls):
+        with open("docs/cbt_doc.md", "r") as file:
+            markdown_content = ""
             while chunk := file.read(cls.chunk_size):
                 markdown_content += chunk
         cls.cbt_doc = markdown_content
 
     @classmethod
-    def final_prompt(cls, latest_dialogue: str, technique: str = "None", stage: str = "None", stage_example: str = "None") -> str:
-        return f'''
+    def final_prompt(
+        cls,
+        latest_dialogue: str,
+        technique: str = "None",
+        stage: str = "None",
+        stage_example: str = "None",
+    ) -> str:
+        return f"""
         # System Role
     You are a psychotherapist who uses Cognitive Behavioral Therapy to treat patients of all types.
 
@@ -67,11 +201,11 @@ class CBTPrompt:
 
     **utterance example of the stage:** ```
     {stage_example}```
-    '''
+    """
 
     @staticmethod
     def cognitive_distortion_detection(latest_dialogue: str) -> str:
-        return f'''
+        return f"""
     # System Role
     You are an expert in CBT techniques and detecting cognitive distortions.
 
@@ -91,11 +225,11 @@ class CBTPrompt:
 
     **recent utterances**:```
     {latest_dialogue}```
-    '''
+    """
 
     @staticmethod
     def technique_selection(distortion_type: str, memory: str) -> str:
-        return f'''
+        return f"""
     # System Role
     You are an expert in CBT techniques and a counseling agent.
 
@@ -118,32 +252,32 @@ class CBTPrompt:
 
     **relevant information about the client associated with that cognitive distortion**: ```
     {memory}```
-    '''
+    """
 
-    @staticmethod
-    def stage_selection(technique: str, progress: str, cbt_usage_log: str, latest_dialogue: str) -> str:
-        return f'''
+    @classmethod
+    def stage_example(
+        cls, technique: str, cbt_usage_log: str, latest_dialogue: str
+    ) -> str:
+        return f"""
     # System Role
     You are an expert in CBT techniques and a counseling agent.
-    You are going to apply {technique} in counseling using
-    CBT technique. {progress} is the sequence of {technique}.
+    You are going to apply {technique} in counseling.
+    {cbt_usage_log} is the sequence of stages of the {technique} technique.
 
     # Task Instruction
-    The following dictionary represents CBT usage log, which is
-    the mapping of CBT techniques to the stage of each technique
-    indicating the number of stage completed. ```{cbt_usage_log}```
+    Determine which stage should the counseling follow, if enough progress is not yet made you give the current stage.
+    Also give an example is an appropriate statement for the current stage.
+    Output a JSON with keys "stage_name" and "example".
+
+    # Context
+    CBT usage log is the list of CBT technique indicating the proggress made. ```{cbt_usage_log}```
     The conversation below is a conversation in which {technique} has been applied. ```{latest_dialogue}```
-
-    What is the stage number you would undertake for {technique} based on the conversation provided, the sequence of the CBT Technique and current dialogue state?
-    Psychological counseling should follow that process.
-
-    # Output
-    stage number
-    '''
+    This is the list of all possible stages. ```{cls.cbt_stages[technique]}```
+    """
 
     @staticmethod
     def extract_insight(latest_dialogue: str) -> str:
-        return f'''
+        return f"""
     # System Role  
     You are a psychotherapist who uses Cognitive Behavioral Therapy to help patients.
 
@@ -159,4 +293,4 @@ class CBTPrompt:
     # Given information
     **recent utterances**: ```
     {latest_dialogue}```
-    '''
+    """

@@ -6,7 +6,7 @@ import chromadb
 from openai import OpenAI
 
 from prompts.prompts import CBTPrompt
-from prompts.structured_outputs import CognitiveDistortion, DialogueResponse
+from prompts.structured_outputs import CognitiveDistortion, StageExample
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,15 +30,38 @@ class CoCoAgent:
         """
         self.model_name = "gpt-4o-mini"
         self.llm_client = OpenAI(api_key=api_key)
-        self.chroma_client = chromadb.PersistentClient(path="./")
-        self.cbt_usage_log = list()
+        self.chroma_client = chromadb.Client()
+        self.cbt_usage_log = {
+            "Guided Discovery": ["not_started_yet"],
+            "Efficiency Evaluation": ["not_started_yet"],
+            "Pie Chart Technique": ["not_started_yet"],
+            "Alternative Perspective": ["not_started_yet"],
+            "Decatastrophizing": ["not_started_yet"],
+            "Scaling Questions": ["not_started_yet"],
+            "Socratic Questioning": ["not_started_yet"],
+            "Pros and Cons Analysis": ["not_started_yet"],
+            "Thought Experiment": ["not_started_yet"],
+            "Evidence-Based Questioning": ["not_started_yet"],
+            "Reality Testing": ["not_started_yet"],
+            "Continuum Technique": ["not_started_yet"],
+            "Changing Rules to Wishes": ["not_started_yet"],
+            "Behavior Experiment": ["not_started_yet"],
+            "Activity Scheduling": ["not_started_yet"],
+            "Problem-Solving Skills Training": ["not_started_yet"],
+            "Self-Assertiveness Training": ["not_started_yet"],
+            "Role-playing and Simulation": ["not_started_yet"],
+            "Practice of Assertive Conversation Skills": ["not_started_yet"],
+            "Systematic Exposure": ["not_started_yet"],
+            "Safety Behaviors Elimination": ["not_started_yet"],
+        }
+
         self.chat_history = list()
         self.basic_memory = self.chroma_client.get_or_create_collection(
             name="basic_memory"
         )
         self.cd_memory = self.chroma_client.get_or_create_collection(name="cd_memory")
 
-        CBTPrompt.load_cbt_doc()
+        CBTPrompt.load_docs()
         # logger.info("CoCoAgent initialized with model: %s", self.model_name)
 
     def response_from_opanai(self, prompt: str) -> str:
@@ -61,7 +84,7 @@ class CoCoAgent:
         # logger.info("Received response: %s", response)
         return response
 
-    def structured_response_from_openai(self, prompt):
+    def structured_response_from_openai(self, prompt, structure):
         """
         Generate a structured response from OpenAI for the given prompt.
 
@@ -77,7 +100,7 @@ class CoCoAgent:
             messages=[
                 {"role": "user", "content": prompt},
             ],
-            response_format=CognitiveDistortion,
+            response_format=structure,
         )
         response = completion.choices[0].message.parsed
         # logger.info("Received structured response: %s", response)
@@ -124,23 +147,24 @@ class CoCoAgent:
             CognitiveDistortion: The detected cognitive distortion.
         """
         return self.structured_response_from_openai(
-            CBTPrompt.cognitive_distortion_detection(latest_dialogue)
+            CBTPrompt.cognitive_distortion_detection(latest_dialogue),
+            CognitiveDistortion,
         )
 
-    def select_cbt_stage(self, technique: str, progress: str, latest_dialogue: str):
+    def cbt_stage_and_example(self, technique: str, latest_dialogue: str):
         """
         Select the CBT stage based on the detected cognitive distortion.
 
         Returns:
             str: The selected CBT stage.
         """
-        return self.response_from_opanai(
-            CBTPrompt.stage_selection(
+        return self.structured_response_from_openai(
+            CBTPrompt.stage_example(
                 technique=technique,
-                progress=progress,
-                cbt_usage_log=self.cbt_usage_log,
+                cbt_usage_log=self.cbt_usage_log[technique],
                 latest_dialogue=latest_dialogue,
-            )
+            ),
+            StageExample,
         )
 
     def extract_insight(self, latest_dialogue):
@@ -169,14 +193,14 @@ class CoCoAgent:
         )
 
     def retrieve_memory(
-        self, cd_star: CognitiveDistortion, latest_dialogue: str, n_results: int = 5
+        self, cd_star: str, latest_dialogue: str, n_results: int = 5
     ) -> str:
         b_k = self.basic_memory.query(
-            query_texts=[json.dumps(dict(cd_star)), latest_dialogue],
+            query_texts=[cd_star, latest_dialogue],
             n_results=n_results,
         )
         d_k = self.cd_memory.query(
-            query_texts=[json.dumps(dict(cd_star)), latest_dialogue],
+            query_texts=[cd_star, latest_dialogue],
             n_results=n_results,
         )
         return "\n".join(b_k["documents"][0]) + "\n" + str(d_k["metadatas"][0])
@@ -194,7 +218,7 @@ class CoCoAgent:
         final_prompt = ""
         self.chat_history.append({"role": "user", "content": client_utterance})
 
-        latest_dialogue = "".join([json.dumps(item) for item in self.chat_history[-3:]])
+        latest_dialogue = "".join([json.dumps(item) for item in self.chat_history[-4:]])
         logger.info("Latest dialogue: %s", latest_dialogue)
 
         cognitive_distortion = self.detect_cognitive_distortion(latest_dialogue)
@@ -218,21 +242,22 @@ class CoCoAgent:
         if self.cd_memory.count() < 1:
             final_prompt = CBTPrompt.final_prompt(latest_dialogue)
         else:
-            cd_star = cognitive_distortion
+            cd_star = cognitive_distortion.distortion_type
             relevant_memory = self.retrieve_memory(cd_star, latest_dialogue)
             logger.info("Retrieved memory: %s", relevant_memory)
+
             cbt_technique = self.select_cbt_technique(cd_star)
             logger.info("Selected CBT technique: %s", cbt_technique)
 
-            cbt_stage = self.select_cbt_stage(
-                technique=cbt_technique, progress="", latest_dialogue=self.chat_history
+            cbt_stage_example = self.cbt_stage_and_example(
+                technique=cbt_technique, latest_dialogue=self.chat_history
             )
-            logger.info("Selected CBT stage: %s", cbt_stage)
+            logger.info("Selected CBT stage and example: %s", cbt_stage_example)
             final_prompt = CBTPrompt.final_prompt(
                 latest_dialogue=latest_dialogue,
                 technique=cbt_technique,
-                stage=cbt_stage,
-                stage_example="None",
+                stage=cbt_stage_example.stage_name,
+                stage_example=cbt_stage_example.exmaple,
             )
             self.log_technique(cbt_technique)
 

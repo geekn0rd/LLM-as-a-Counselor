@@ -7,6 +7,11 @@ class CognitiveDistortion(BaseModel):
     score: int
 
 
+class StageExample(BaseModel):
+    stage_name: str
+    example: str
+
+
 class DialogueRequest(BaseModel):
     messages: str
 
