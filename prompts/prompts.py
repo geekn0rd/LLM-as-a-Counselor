@@ -27,8 +27,15 @@ class CBTPrompt:
         latest_dialogue: str,
         technique: str = "None",
         stage: str = "None",
-        stage_example: str = "None",
     ) -> str:
+        """
+        utterance example of the stage you should go on
+        - Restatement or Paraphrasing: A simple, more concise
+        rephrasing of the help-seeker’s statements that could help
+        them see their situation more clearly.
+        - Reflection of Feelings: Articulate and describe the helpseeker’s feelings.
+        """
+
         return f"""
         # System Role
     You are a psychotherapist who uses Cognitive Behavioral Therapy to treat patients of all types.
@@ -39,19 +46,15 @@ class CBTPrompt:
     # Instructions
     1. Generate response based on given information: recent
     utterances, CBT technique to employ, the description of CBT
-    technique, stage of CBT technique you should go on, utterance example of the stage you should go on.
+    technique, stage of CBT technique you should go on.
     2. If CBT technique to employ and the description of CBT technique is None, don’t use the CBT technique.
     3. Select one of the given ESC techniques and generate a supportive response in the client’s dialogue providing emotional support.
     4. Do not mention specific CBT techniques or steps you are looking to apply concretely.
 
     # ESC strategy
     - Question: Asking for information related to the problem to
-    help the help-seeker articulate the issues that they face. Openended questions are best,and closed questions can be used to
+    help the help-seeker articulate the issues that they face. Openended questions are best, and closed questions can be used to
     get specific information.
-    - Restatement or Paraphrasing: A simple, more concise
-    rephrasing of the help-seeker’s statements that could help
-    them see their situation more clearly.
-    - Reflection of Feelings: Articulate and describe the helpseeker’s feelings.
     - Self-disclosure: Divulge similar experiences that you have
     had or emotions that you share with the help-seeker to express
     your empathy.
@@ -78,9 +81,13 @@ class CBTPrompt:
     **CBT stage to employ:** ```
     {stage}```
 
-    **utterance example of the stage:** ```
-    {stage_example}```
+    # Reminder
+    Be very casual and friendly in tone.
+
     """
+
+    # **utterance example of the stage:** ```
+    # {stage_example}```
 
     @staticmethod
     def cognitive_distortion_detection(latest_dialogue: str) -> str:
@@ -143,9 +150,9 @@ class CBTPrompt:
     You are going to apply {technique} in counseling.
 
     # Task Instruction
-    Determine which stage should the counseling follow, if enough progress is not yet made you give the current stage.
-    Also give an example is an appropriate statement for the current stage.
-    Output a JSON with keys "stage_name" and "example".
+    Determine which stage should the counseling follow,
+    if enough progress is not yet made you give the current stage.
+    Output a JSON with a key "stage_name".
 
     # Context
     Following is the mapping of CBT techniques already used to the stage of each technique```{cbt_usage_log}```

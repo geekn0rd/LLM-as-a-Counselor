@@ -78,9 +78,10 @@ class CoCoAgent:
         completion = self.llm_client.chat.completions.create(
             model=self.model_name,
             messages=[
+                *self.chat_history,
                 {"role": "user", "content": prompt},
             ],
-            temperature=0,
+            temperature=0.5,
             stream=True,
         )
         for chunk in completion:
@@ -250,7 +251,6 @@ class CoCoAgent:
                 latest_dialogue=latest_dialogue,
                 technique=cbt_technique,
                 stage=cbt_stage_example.stage_name,
-                stage_example=cbt_stage_example.example,
             )
             self.cbt_usage_log[cbt_technique] = cbt_stage_example.stage_name
 

@@ -9,7 +9,6 @@ class CognitiveDistortion(BaseModel):
 
 class StageExample(BaseModel):
     stage_name: str
-    example: str
 
 
 class DialogueRequest(BaseModel):
