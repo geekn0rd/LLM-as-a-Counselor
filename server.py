@@ -47,7 +47,6 @@ async def chat(request: Request):
     message = messages[-1]
     content_list = message.get("content", [])
 
-    # Extract text content
     dialogue = next(
         (
             content_item.get("text", "")
@@ -63,10 +62,17 @@ async def chat(request: Request):
     async def generate():
         try:
             for chunk in coco_agent.process_dialogue(dialogue):
-                # Ensure chunk is encoded and ends with a newline for SSE
-                yield chunk
+                # Format each chunk as an SSE message
+                yield f"data: {chunk}\n\n"
         except Exception as e:
             logger.error(f"Error processing dialogue: {str(e)}")
-            yield f"data: {str(e)}\n\n".encode("utf-8")
+            yield f"data: {str(e)}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
