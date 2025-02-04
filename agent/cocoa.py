@@ -77,7 +77,9 @@ class CoCoAgent:
         # logger.info("Generating response from OpenAI for prompt: %s", prompt)
         completion = self.llm_client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
             temperature=0,
             stream=True,
         )

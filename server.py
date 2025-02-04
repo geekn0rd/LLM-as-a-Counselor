@@ -40,24 +40,33 @@ async def startup_event():
 async def chat(request: Request):
     request_body = await request.json()
     messages = request_body.get("messages", [])
+
+    if not messages:
+        raise HTTPException(status_code=400, detail="No messages provided")
+
     message = messages[-1]
     content_list = message.get("content", [])
 
-    dialogue = ""
-    for content_item in content_list:
-        if content_item.get("type") == "text":
-            dialogue = content_item.get("text")
+    # Extract text content
+    dialogue = next(
+        (
+            content_item.get("text", "")
+            for content_item in content_list
+            if content_item.get("type") == "text"
+        ),
+        "",
+    )
 
     if not coco_agent:
         raise HTTPException(status_code=500, detail="CoCoAgent not initialized")
 
-    try:
-
-        async def stream_response():
+    async def generate():
+        try:
             for chunk in coco_agent.process_dialogue(dialogue):
+                # Ensure chunk is encoded and ends with a newline for SSE
                 yield chunk
+        except Exception as e:
+            logger.error(f"Error processing dialogue: {str(e)}")
+            yield f"data: {str(e)}\n\n".encode("utf-8")
 
-        return StreamingResponse(stream_response(), media_type="text/event-stream")
-    except Exception as e:
-        logger.error(f"Error processing dialogue: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return StreamingResponse(generate(), media_type="text/event-stream")
